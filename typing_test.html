@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Typing Assessment</title>
+    <style>
+        :root { --primary: #1e3a8a; --bg: #f8fafc; --text: #1e293b; --success: #16a34a; --error: #dc2626; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 40px; }
+        .container { max-width: 900px; width: 100%; background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        
+        /* Stats Dashboard */
+        .stats { display: flex; gap: 20px; margin-bottom: 25px; font-weight: bold; font-size: 1.2rem; color: var(--primary); justify-content: space-around; background: #f1f5f9; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        #quote-display { font-size: 1.4rem; line-height: 1.7; margin-bottom: 25px; color: #64748b; border: 1px solid #e2e8f0; padding: 25px; border-radius: 10px; background: #fff; user-select: none; min-height: 150px; }
+        .correct { color: var(--success); }
+        .incorrect { color: white; background-color: var(--error); border-radius: 3px; }
+        .current { border-bottom: 3px solid var(--primary); }
+        #input-field { width: 100%; padding: 20px; border: 2px solid #cbd5e1; border-radius: 10px; font-size: 1.2rem; outline: none; transition: 0.3s; height: 120px; box-sizing: border-box; }
+        #input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); }
+        
+        /* Setup Area */
+        .name-section { margin-bottom: 25px; text-align: center; }
+        #candidate-name-input { padding: 12px; font-size: 1.1rem; border: 2px solid #cbd5e1; border-radius: 8px; width: 60%; outline: none; }
+
+        /* Results Screen */
+        .results-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 30px 0; }
+        .result-card { background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .result-card h3 { margin: 0; color: #64748b; font-size: 0.9rem; text-transform: uppercase; }
+        .result-card p { margin: 5px 0 0; font-size: 1.8rem; font-weight: bold; color: var(--primary); }
+
+        /* Print-Only Certificate */
+        #certificate { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            #certificate, #certificate * { visibility: visible; }
+            #certificate { 
+                display: block !important; position: absolute; left: 0; top: 0; width: 100%; 
+                padding: 50px; border: 15px double #1e3a8a; box-sizing: border-box; text-align: center; background: white;
+            }
+            .cert-title { font-size: 42px; color: #1e3a8a; text-transform: uppercase; margin-bottom: 10px; font-weight: bold; }
+            .cert-name { font-size: 32px; font-weight: bold; border-bottom: 2px solid #000; display: inline-block; padding: 0 40px; margin: 20px 0; color: #1e293b; }
+            .cert-metrics { display: flex; justify-content: space-around; margin: 40px 0; border: 2px solid #e2e8f0; padding: 25px; background: #fcfcfc; }
+            .metric-box b { font-size: 28px; color: #1e3a8a; }
+            .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 100px; opacity: 0.05; font-weight: bold; color: #1e3a8a; z-index: -1; }
+        }
+
+        .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
+        button { background: var(--primary); color: white; border: none; padding: 14px 28px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: 0.2s; }
+        button:hover { background: #1e40af; transform: translateY(-1px); }
+        .btn-secondary { background: #64748b; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="main-ui">
+        <h1 style="margin-top: 0; color: var(--primary); text-align: center;">Professional Typing Assessment</h1>
+        
+        <div id="setup-area" class="name-section">
+            <p>Enter your full name for the certificate:</p>
+            <input type="text" id="candidate-name-input" placeholder="Full Name">
+        </div>
+
+        <div id="test-area">
+            <div class="stats">
+                <span>Time Remaining: <span id="timer">300</span>s</span>
+                <span>WPM: <span id="wpm">0</span></span>
+                <span>Accuracy: <span id="accuracy">100</span>%</span>
+            </div>
+            <div id="quote-display">Initializing assessment text...</div>
+            <textarea id="input-field" placeholder="Click here and begin typing to start the 5-minute test..."></textarea>
+        </div>
+
+        <div id="result-area" class="hidden" style="text-align:center;">
+            <h2 style="color: var(--success); font-size: 2.2rem; margin-bottom: 5px;">Assessment Complete</h2>
+            <p id="display-final-name" style="font-size: 1.2rem; font-weight: 600; color: #475569;"></p>
+            
+            <div class="results-summary">
+                <div class="result-card"><h3>Speed</h3><p><span id="res-wpm">0</span> WPM</p></div>
+                <div class="result-card"><h3>Accuracy</h3><p><span id="res-acc">0</span>%</p></div>
+                <div class="result-card"><h3>Total Errors</h3><p><span id="res-err">0</span></p></div>
+            </div>
+
+            <div class="btn-group">
+                <button onclick="window.print()">Download Certificate (PDF)</button>
+                <button class="btn-secondary" onclick="location.reload()">Restart Test</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Certificate for Printing -->
+    <div id="certificate">
+        <div class="watermark">VERIFIED RESULTS</div>
+        <div class="cert-title">Certificate of Achievement</div>
+        <p style="font-size: 18px; color: #64748b;">This award is presented to</p>
+        <div class="cert-name" id="cert-display-name">Candidate Name</div>
+        <p style="font-size: 18px;">For demonstrating professional typing proficiency during a<br><b>5-Minute Standardized Assessment</b>.</p>
+        
+        <div class="cert-metrics">
+            <div class="metric-box">Typing Speed<br><b id="cert-wpm">0</b> WPM</div>
+            <div class="metric-box">Accuracy Rate<br><b id="cert-accuracy">0</b>%</div>
+            <div class="metric-box">Net Errors<br><b id="cert-errors">0</b></div>
+        </div>
+
+        <div style="margin-top: 60px; display: flex; justify-content: space-between; padding: 0 40px;">
+            <div style="text-align: center;">
+                <div id="cert-date" style="font-weight: bold; margin-bottom: 5px;"></div>
+                <div style="border-top: 2px solid #1e3a8a; width: 180px; padding-top: 8px; font-size: 14px;">DATE ISSUED</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-family: 'Brush Script MT', cursive; font-size: 24px; color: #1e3a8a;">Digitally Verified</div>
+                <div style="border-top: 2px solid #1e3a8a; width: 180px; padding-top: 8px; font-size: 14px;">AUTHORISED SIGNATORY</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const texts = [
+            `The advancement of technology has fundamentally altered the landscape of the modern workplace, requiring employees to adapt to a digital-first environment. In this era, the ability to process information quickly and accurately via a keyboard is no longer just an asset; it is a core requirement for productivity across nearly every industry. Mastering touch typing allows a professional to focus on the content of their work rather than the mechanics of the keyboard, leading to higher quality outputs and reduced mental fatigue.`,
+            `Sustainability and environmental consciousness have become central themes in global corporate responsibility as businesses recognize their impact on the planet's ecosystem. Companies are now implementing comprehensive strategies to reduce their carbon footprints, ranging from optimizing supply chains to adopting renewable energy sources. This shift is driven by regulatory pressures and growing consumer demand for ethically produced goods. By fostering a culture of sustainability, organizations can attract top-tier talent.`,
+            `The concept of emotional intelligence has gained significant traction in leadership development, emphasizing that technical skills alone are insufficient for effective management. Leaders who possess high emotional intelligence are better equipped to navigate the complexities of human relationships, manage conflict, and inspire their teams toward a common goal. This involves a deep level of self awareness and empathy toward others, preventing burnout and fostering inclusive workplace cultures.`
+        ];
+
+        let timeLeft = 300; let isStarted = false; let interval = null; let errors = 0;
+        const inputField = document.getElementById('input-field');
+        const quoteDisplay = document.getElementById('quote-display');
+        const nameInput = document.getElementById('candidate-name-input');
+
+        function initTest() {
+            const selectedText = texts[Math.floor(Math.random() * texts.length)];
+            quoteDisplay.innerHTML = '';
+            selectedText.split('').forEach(char => {
+                const span = document.createElement('span');
+                span.innerText = char;
+                quoteDisplay.appendChild(span);
+            });
+            document.getElementById('cert-date').innerText = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        inputField.addEventListener('input', () => {
+            if (!isStarted) { isStarted = true; nameInput.disabled = true; startTimer(); }
+            const spans = quoteDisplay.querySelectorAll('span');
+            const typed = inputField.value.split('');
+            errors = 0;
+
+            spans.forEach((span, i) => {
+                const char = typed[i];
+                span.classList.remove('correct', 'incorrect', 'current');
+                if (char == null) { if (i === typed.length) span.classList.add('current'); }
+                else if (char === span.innerText) span.classList.add('correct');
+                else { span.classList.add('incorrect'); errors++; }
+            });
+
+            let elapsed = (300 - timeLeft) / 60;
+            let wpm = Math.round((typed.length / 5) / (elapsed || 0.01)) || 0;
+            let acc = typed.length > 0 ? Math.round(((typed.length - errors) / typed.length) * 100) : 100;
+            document.getElementById('wpm').innerText = wpm;
+            document.getElementById('accuracy').innerText = acc;
+            if (typed.length >= spans.length) finishTest();
+        });
+
+        function startTimer() {
+            interval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft;
+                if (timeLeft <= 0) finishTest();
+            }, 1000);
+        }
+
+        function finishTest() {
+            clearInterval(interval);
+            inputField.disabled = true;
+            document.getElementById('test-area').classList.add('hidden');
+            document.getElementById('setup-area').classList.add('hidden');
+            document.getElementById('result-area').classList.remove('hidden');
+
+            const name = nameInput.value.trim() || "Candidate";
+            const w = document.getElementById('wpm').innerText;
+            const a = document.getElementById('accuracy').innerText;
+
+            document.getElementById('display-final-name').innerText = "Candidate: " + name;
+            document.getElementById('res-wpm').innerText = w; document.getElementById('res-acc').innerText = a; document.getElementById('res-err').innerText = errors;
+            document.getElementById('cert-display-name').innerText = name;
+            document.getElementById('cert-wpm').innerText = w; document.getElementById('cert-accuracy').innerText = a; document.getElementById('cert-errors').innerText = errors;
+        }
+
+        initTest();
+    </script>
+</body>
+</html>
