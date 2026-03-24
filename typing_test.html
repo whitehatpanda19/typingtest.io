@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    // Potential mobile or tablet device
+    document.write('<div style="color: red; padding: 20px; font-size: 18px;">');
+    document.write('<h1> ACCESS DENIED!</h1>');
+    document.write('</div>');     
+    document.write('Mobile device Detected. Unable to Proceed!');
+    window.stop();
+}
+</script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Professional Typing Assessment</title>
